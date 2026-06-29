@@ -11,37 +11,38 @@ use Illuminate\Support\Facades\Auth;
 class RecipeController extends Controller
 {
     // Show all recipes
-    public function index(Request $request){
-    $query = Recipe::with(['user', 'categories', 'ingredients', 'reviews']);
+    public function index(Request $request)
+    {
+        $query = Recipe::with(['user', 'categories', 'ingredients', 'reviews']);
 
-    // Search by title
-    if ($request->search) {
-        $query->where('title', 'like', '%' . $request->search . '%')
-        ->orWhere('description', 'like', '%' . $request->search . '%');
+        // Search by title
+        if ($request->search) {
+            $query->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by difficulty
+        if ($request->difficulty && $request->difficulty !== 'all') {
+            $query->where('difficulty', $request->difficulty);
+        }
+
+        // Filter by category
+        if ($request->category && $request->category !== 'all') {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('name', $request->category);
+            });
+        }
+
+        $recipes = $query->latest()->get();
+
+        return view('recipes.index', compact('recipes'));
     }
-
-    // Filter by difficulty
-    if ($request->difficulty && $request->difficulty !== 'all') {
-        $query->where('difficulty', $request->difficulty);
-    }
-
-    // Filter by category
-    if ($request->category && $request->category !== 'all') {
-        $query->whereHas('categories', function($q) use ($request) {
-            $q->where('name', $request->category);
-        });
-    }
-
-    $recipes = $query->latest()->get();
-
-    return view('recipes.index', compact('recipes'));
-}
 
     // Show form to create a new recipe
     public function create()
     {
         $categories = Category::all();
-        $ingredients = Ingredient::all();
+        $ingredients = Ingredient::orderBy('name')->get();
         return view('recipes.create', compact('categories', 'ingredients'));
     }
 
@@ -76,15 +77,15 @@ class RecipeController extends Controller
         }
 
         // Attach ingredients
-            if ($request->ingredient_ids) {
-                foreach ($request->ingredient_ids as $index => $ingredientId) {
-                    if ($ingredientId) {
-                        $recipe->ingredients()->attach($ingredientId, [
-                            'quantity' => $request->quantities[$index] ?? ''
-                        ]);
-                    }
+        if ($request->ingredient_ids) {
+            foreach ($request->ingredient_ids as $index => $ingredientId) {
+                if ($ingredientId) {
+                    $recipe->ingredients()->attach($ingredientId, [
+                        'quantity' => $request->quantities[$index] ?? ''
+                    ]);
                 }
             }
+        }
 
         return redirect()->route('recipes.index')->with('success', 'Recipe created successfully!');
     }
@@ -100,7 +101,7 @@ class RecipeController extends Controller
     public function edit(Recipe $recipe)
     {
         $categories = Category::all();
-        $ingredients = Ingredient::all();
+        $ingredients = Ingredient::orderBy('name')->get();
         return view('recipes.edit', compact('recipe', 'categories', 'ingredients'));
     }
 
@@ -156,40 +157,41 @@ class RecipeController extends Controller
         $recipe->delete();
         return redirect()->route('recipes.index')->with('success', 'Recipe deleted successfully!');
     }
+
     // Smart Ingredient Matching
-public function match(Request $request)
-{
-    $ingredients = Ingredient::all();
-    $matchedRecipes = collect();
+    public function match(Request $request)
+    {
+        $ingredients = Ingredient::orderBy('name')->get();
+        $matchedRecipes = collect();
 
-    if ($request->isMethod('post') && $request->ingredient_ids) {
-        $selectedIds = array_filter($request->ingredient_ids);
+        if ($request->isMethod('post') && $request->ingredient_ids) {
+            $selectedIds = array_filter($request->ingredient_ids);
 
-        if (!empty($selectedIds)) {
-            $recipes = Recipe::with(['ingredients', 'categories', 'user', 'reviews'])->get();
+            if (!empty($selectedIds)) {
+                $recipes = Recipe::with(['ingredients', 'categories', 'user', 'reviews'])->get();
 
-            foreach ($recipes as $recipe) {
-                $recipeIngredientIds = $recipe->ingredients->pluck('id')->toArray();
-                $matchCount = count(array_intersect($selectedIds, $recipeIngredientIds));
-                $totalIngredients = count($recipeIngredientIds);
+                foreach ($recipes as $recipe) {
+                    $recipeIngredientIds = $recipe->ingredients->pluck('id')->toArray();
+                    $matchCount = count(array_intersect($selectedIds, $recipeIngredientIds));
+                    $totalIngredients = count($recipeIngredientIds);
 
-                if ($matchCount > 0) {
-                    $percentage = $totalIngredients > 0
-                        ? round(($matchCount / $totalIngredients) * 100)
-                        : 0;
+                    if ($matchCount > 0) {
+                        $percentage = $totalIngredients > 0
+                            ? round(($matchCount / $totalIngredients) * 100)
+                            : 0;
 
-                    $recipe->match_count = $matchCount;
-                    $recipe->match_percentage = $percentage;
-                    $recipe->total_ingredients = $totalIngredients;
-                    $matchedRecipes->push($recipe);
+                        $recipe->match_count = $matchCount;
+                        $recipe->match_percentage = $percentage;
+                        $recipe->total_ingredients = $totalIngredients;
+                        $matchedRecipes->push($recipe);
+                    }
                 }
+
+                // Sort by match percentage (highest first)
+                $matchedRecipes = $matchedRecipes->sortByDesc('match_percentage');
             }
-
-            // Sort by match percentage (highest first)
-            $matchedRecipes = $matchedRecipes->sortByDesc('match_percentage');
         }
-    }
 
-    return view('recipes.match', compact('ingredients', 'matchedRecipes'));
-}
+        return view('recipes.match', compact('ingredients', 'matchedRecipes'));
+    }
 }

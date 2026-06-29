@@ -78,30 +78,40 @@
             </div>
 
             {{-- Ingredients --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                    <label class="block text-sm font-semibold text-suText">Ingredients</label>
-                    <button type="button" onclick="addIngredient()" class="text-xs bg-suBg hover:bg-primary hover:text-white text-primary border border-primary px-4 py-2 rounded-full transition-all duration-200">
-                        + Add Ingredient
-                    </button>
+<div class="bg-white rounded-2xl p-6 shadow-sm">
+    <div class="flex justify-between items-center mb-4">
+        <label class="block text-sm font-semibold text-suText">Ingredients</label>
+        <button type="button" onclick="addIngredient()" class="text-xs bg-suBg hover:bg-primary hover:text-white text-primary border border-primary px-4 py-2 rounded-full transition-all duration-200">
+            + Add Ingredient
+        </button>
+    </div>
+    <div id="ingredients-list" class="space-y-3">
+        <div class="flex gap-3 items-center ingredient-row">
+            <div class="relative flex-1">
+                <input type="text"
+                       class="ingredient-search w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary"
+                       placeholder="Type to search ingredient..."
+                       autocomplete="off">
+                <input type="hidden" name="ingredient_ids[]" class="ingredient-id-input">
+                <div class="ingredient-dropdown absolute z-20 w-full bg-white border border-gray-200 rounded-xl mt-1 max-h-48 overflow-y-auto shadow-lg hidden">
+                    @foreach($ingredients as $ingredient)
+                        <div class="ingredient-option px-4 py-2 text-sm hover:bg-suBg cursor-pointer"
+                             data-id="{{ $ingredient->id }}"
+                             data-name="{{ $ingredient->name }} ({{ $ingredient->unit }})">
+                            {{ $ingredient->name }} ({{ $ingredient->unit }})
+                        </div>
+                    @endforeach
                 </div>
-                <div id="ingredients-list" class="space-y-3">
-                    <div class="flex gap-3 items-center ingredient-row">
-                        <select name="ingredient_ids[]" class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary">
-                            <option value="">Select ingredient</option>
-                            @foreach($ingredients as $ingredient)
-                                <option value="{{ $ingredient->id }}">{{ $ingredient->name }} ({{ $ingredient->unit }})</option>
-                            @endforeach
-                        </select>
-                        <input type="number" name="quantities[]" placeholder="Quantity e.g. 2 cups"
-                            class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary">
-                        <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 text-lg">✕</button>
-                    </div>
-                </div>
-                @if($ingredients->count() === 0)
-                    <p class="text-gray-400 text-sm mt-3">No ingredients yet. <a href="{{ route('ingredients.create') }}" class="text-primary">Add some first.</a></p>
-                @endif
             </div>
+            <input type="number" name="quantities[]" placeholder="Quantity e.g. 2 cups"
+                class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary">
+            <button type="button" onclick="this.closest('.ingredient-row').remove()" class="text-red-400 hover:text-red-600 text-lg">✕</button>
+        </div>
+    </div>
+    @if($ingredients->count() === 0)
+        <p class="text-gray-400 text-sm mt-3">No ingredients yet. <a href="{{ route('ingredients.create') }}" class="text-primary">Add some first.</a></p>
+    @endif
+</div>
 
             {{-- Submit --}}
             <div class="flex gap-4">
@@ -121,12 +131,62 @@
 
 @push('scripts')
 <script>
+    function initIngredientRow(row) {
+        const searchInput = row.querySelector('.ingredient-search');
+        const hiddenInput = row.querySelector('.ingredient-id-input');
+        const dropdown = row.querySelector('.ingredient-dropdown');
+        const options = row.querySelectorAll('.ingredient-option');
+
+        searchInput.addEventListener('focus', () => {
+            dropdown.classList.remove('hidden');
+        });
+
+        searchInput.addEventListener('input', () => {
+            const term = searchInput.value.toLowerCase();
+            hiddenInput.value = ''; // clear selection if they keep typing
+            let anyVisible = false;
+
+            options.forEach(opt => {
+                const matches = opt.dataset.name.toLowerCase().includes(term);
+                opt.style.display = matches ? 'block' : 'none';
+                if (matches) anyVisible = true;
+            });
+
+            dropdown.classList.toggle('hidden', !anyVisible);
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', () => {
+                searchInput.value = opt.dataset.name;
+                hiddenInput.value = opt.dataset.id;
+                dropdown.classList.add('hidden');
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!row.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
     function addIngredient() {
         const list = document.getElementById('ingredients-list');
         const row = document.querySelector('.ingredient-row').cloneNode(true);
-        // Reset values
-        row.querySelectorAll('select, input').forEach(el => el.value = '');
+
+        // Reset values in the clone
+        row.querySelector('.ingredient-search').value = '';
+        row.querySelector('.ingredient-id-input').value = '';
+        row.querySelectorAll('input[type="number"], input[type="text"][name="quantities[]"]').forEach(el => el.value = '');
+        row.querySelectorAll('.ingredient-option').forEach(opt => opt.style.display = 'block');
+        row.querySelector('.ingredient-dropdown').classList.add('hidden');
+
         list.appendChild(row);
+        initIngredientRow(row);
     }
+
+    // Initialize the first row on page load
+    document.querySelectorAll('.ingredient-row').forEach(initIngredientRow);
 </script>
 @endpush
