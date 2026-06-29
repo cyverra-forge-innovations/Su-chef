@@ -423,8 +423,8 @@ INSERT INTO ingredients (name, unit, category, created_at, updated_at) VALUES
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USERNAME=caleboche04@gmail.com
-MAIL_PASSWORD=xflgtuumitqphwkc
+MAIL_USERNAME=cyverraforgeinnovations@gmail.com
+MAIL_PASSWORD=fyfugluepeffmfsy
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=caleboche04@gmail.com
+MAIL_FROM_ADDRESS=cyverraforgeinnovations@gmail.com
 MAIL_FROM_NAME="Su-chef"
