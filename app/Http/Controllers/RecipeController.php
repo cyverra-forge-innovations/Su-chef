@@ -35,6 +35,25 @@ class RecipeController extends Controller
 
         $recipes = $query->latest()->get();
 
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+        $minPrice = $request->input('min_price', 0);
+        $maxPrice = $request->input('max_price', PHP_INT_MAX);
+
+        $recipes = $recipes->filter(function ($recipe) use ($minPrice, $maxPrice) {
+            $cost = $recipe->getEstimatedCost();
+
+            // Recipes with no price data are excluded from a strict filter
+            if (! $cost) {
+                return false;
+            }
+
+            // Use the midpoint of min/max range for comparison
+            $avgCost = ($cost['min'] + $cost['max']) / 2;
+
+            return $avgCost >= $minPrice && $avgCost <= $maxPrice;
+        });
+    }
+
         return view('recipes.index', compact('recipes'));
     }
 
@@ -50,11 +69,12 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string',
-            'cook_time'   => 'required|integer',
-            'difficulty'  => 'required|in:easy,medium,hard',
-            'image'       => 'nullable|image|max:2048',
+            'title'        => 'required|string|max:255',
+            'description'  => 'required|string',
+            'instructions' => 'required|string',
+            'cook_time'    => 'required|integer',
+            'difficulty'   => 'required|in:easy,medium,hard',
+            'image'        => 'nullable|image|max:2048',
         ]);
 
         $imagePath = null;
@@ -63,12 +83,13 @@ class RecipeController extends Controller
         }
 
         $recipe = Recipe::create([
-            'user_id'     => Auth::id(),
-            'title'       => $request->title,
-            'description' => $request->description,
-            'cook_time'   => $request->cook_time,
-            'difficulty'  => $request->difficulty,
-            'image'       => $imagePath,
+            'user_id'      => Auth::id(),
+            'title'        => $request->title,
+            'description'  => $request->description,
+            'instructions' => $request->instructions,
+            'cook_time'    => $request->cook_time,
+            'difficulty'   => $request->difficulty,
+            'image'        => $imagePath,
         ]);
 
         // Attach categories
@@ -109,11 +130,12 @@ class RecipeController extends Controller
     public function update(Request $request, Recipe $recipe)
     {
         $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string',
-            'cook_time'   => 'required|integer',
-            'difficulty'  => 'required|in:easy,medium,hard',
-            'image'       => 'nullable|image|max:2048',
+            'title'        => 'required|string|max:255',
+            'description'  => 'required|string',
+            'instructions' => 'required|string',
+            'cook_time'    => 'required|integer',
+            'difficulty'   => 'required|in:easy,medium,hard',
+            'image'        => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -122,10 +144,11 @@ class RecipeController extends Controller
         }
 
         $recipe->update([
-            'title'       => $request->title,
-            'description' => $request->description,
-            'cook_time'   => $request->cook_time,
-            'difficulty'  => $request->difficulty,
+            'title'        => $request->title,
+            'description'  => $request->description,
+            'instructions' => $request->instructions,
+            'cook_time'    => $request->cook_time,
+            'difficulty'   => $request->difficulty,
         ]);
 
         // Sync categories

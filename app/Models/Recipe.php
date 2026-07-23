@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Recipe extends Model
 {
     protected $fillable = [
-        'user_id', 'title', 'description', 'image', 'cook_time', 'difficulty'
+        'user_id', 'title', 'description', 'instructions', 'cook_time', 'difficulty', 'image',
     ];
 
     // A recipe belongs to a user
@@ -38,5 +38,37 @@ class Recipe extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'recipe_categories');
+    }
+
+    public function getEstimatedCost(): ?array
+    {
+        $totalMin = 0;
+        $totalMax = 0;
+        $missing = [];
+        $hasAny = false;
+
+        foreach ($this->ingredients as $ingredient) {
+            $summary = $ingredient->getPriceSummary();
+            $qty = is_numeric($ingredient->pivot->quantity) ? (float) $ingredient->pivot->quantity : null;
+
+            if ($summary && $qty) {
+                $totalMin += $summary['min'] * $qty;
+                $totalMax += $summary['max'] * $qty;
+                $hasAny = true;
+            } else {
+                $missing[] = $ingredient->name;
+            }
+        }
+
+        if (! $hasAny) {
+            return null;
+        }
+
+        return [
+            'min'      => round($totalMin, 0),
+            'max'      => round($totalMax, 0),
+            'complete' => empty($missing),
+            'missing'  => $missing,
+        ];
     }
 }

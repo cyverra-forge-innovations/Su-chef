@@ -90,6 +90,105 @@
                     </div>
                     @endforeach
                 @else
+                {{-- Inside the shopping list show view, after the list header --}}
+
+@php
+    $totalMin = 0;
+    $totalMax = 0;
+    $hasAnyPrice = false;
+    $missingPrices = [];
+@endphp
+
+<div class="space-y-3 mb-6">
+    @foreach ($shoppingList->items as $item)
+        @php
+            $summary = $item->ingredient->getPriceSummary();
+            $qty = is_numeric($item->quantity) ? (float) $item->quantity : null;
+        @endphp
+
+        <div class="bg-white rounded-2xl border border-[#E8D5C4] px-5 py-4 flex items-start justify-between gap-4">
+
+            {{-- Checkbox + name --}}
+            <div class="flex items-start gap-3">
+                <form method="POST" action="{{ route('shopping-lists.toggle', $item) }}">
+                    @csrf @method('PATCH')
+                    <button type="submit"
+                            class="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition
+                                {{ $item->is_checked ? 'bg-[#C1440E] border-[#C1440E]' : 'border-[#D4B8A8]' }}">
+                        @if ($item->is_checked)
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        @endif
+                    </button>
+                </form>
+
+                <div>
+                    <p class="font-semibold text-sm text-[#5C3D2E] {{ $item->is_checked ? 'line-through text-[#B0957E]' : '' }}">
+                        {{ $item->ingredient->name }}
+                    </p>
+                    <p class="text-xs text-[#8B6F5E]">{{ $item->quantity }}</p>
+                </div>
+            </div>
+
+            {{-- Price estimate --}}
+            <div class="text-right text-sm shrink-0">
+                @if ($summary && $qty)
+                    @php
+                        $lineMin = round($summary['min'] * $qty, 0);
+                        $lineMax = round($summary['max'] * $qty, 0);
+                        $totalMin += $lineMin;
+                        $totalMax += $lineMax;
+                        $hasAnyPrice = true;
+                    @endphp
+                    <p class="font-semibold text-[#C1440E]">
+                        ₦{{ number_format($lineMin, 0) }}
+                        @if ($lineMin !== $lineMax) – ₦{{ number_format($lineMax, 0) }} @endif
+                    </p>
+                    <p class="text-xs text-[#8B6F5E]">
+                        {{ $summary['count'] }} {{ Str::plural('submission', $summary['count']) }}
+                    </p>
+                @elseif ($summary)
+                    <p class="text-xs text-[#8B6F5E]">Price available<br>qty not numeric</p>
+                @else
+                    @php $missingPrices[] = $item->ingredient->name; @endphp
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-xs text-[#B0957E]">No price data</span>
+                        @if (auth()->user()?->canManagePrices())
+    <a href="{{ route('ingredient-prices.create', $item->ingredient) }}"
+       class="text-xs text-primary underline hover:no-underline">
+        Submit price
+    </a>
+@else
+    <span class="text-xs text-gray-400">No price data</span>
+@endif
+                    </div>
+                @endif
+            </div>
+
+        </div>
+    @endforeach
+</div>
+
+{{-- Total cost estimate --}}
+@if ($hasAnyPrice)
+    <div class="bg-[#FFF8F2] border border-[#E8D5C4] rounded-2xl px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="font-semibold text-[#5C3D2E] text-sm">Estimated Total</p>
+                @if (!empty($missingPrices))
+                    <p class="text-xs text-[#8B6F5E] mt-0.5">
+                        Excludes: {{ implode(', ', $missingPrices) }} (no price data yet)
+                    </p>
+                @endif
+            </div>
+            <p class="text-2xl font-bold text-[#C1440E]" style="font-family: Georgia, serif;">
+                ₦{{ number_format($totalMin, 0) }}
+                @if ($totalMin !== $totalMax) – ₦{{ number_format($totalMax, 0) }} @endif
+            </p>
+        </div>
+    </div>
+@endif
                     <div class="text-center py-16">
                         <i class="fa-solid fa-cart-shopping text-6xl text-gray-200 mb-4"></i>
                         <p class="text-gray-400">No items in this list yet.</p>

@@ -11,7 +11,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password'
+        'name', 'email', 'password', 'role'
     ];
 
     protected $hidden = [
@@ -54,5 +54,25 @@ class User extends Authenticatable
     public function preference()
     {
         return $this->hasOne(UserPreference::class);
+    }
+
+    public function isMarketWoman(): bool
+    {
+        return $this->role === 'market_woman';
+    }
+
+    public function isPendingMarketWoman(): bool
+    {
+        return $this->role === 'pending_market_woman';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function canManagePrices(): bool
+    {
+        return in_array($this->role, ['market_woman', 'admin']);
     }
 }

@@ -44,7 +44,11 @@
             {{-- Instructions --}}
             <div class="bg-white rounded-2xl p-8 shadow-sm">
                 <h2 class="font-serif text-2xl font-bold text-suText mb-6">Instructions</h2>
-                <p class="text-gray-400">No instructions added yet.</p>
+                @if($recipe->instructions)
+                    <div class="text-gray-600 leading-relaxed whitespace-pre-line">{{ $recipe->instructions }}</div>
+                @else
+                    <p class="text-gray-400">No instructions added yet.</p>
+                @endif
             </div>
 
             {{-- Reviews --}}
@@ -56,14 +60,19 @@
                 <form method="POST" action="{{ route('reviews.store', $recipe) }}" class="mb-8 pb-8 border-b border-gray-100">
                     @csrf
                     <h3 class="font-semibold text-suText mb-4">Leave a Review</h3>
-                    <div class="flex gap-2 mb-4">
+
+                    <div class="flex gap-1 mb-4" x-data="{ rating: 0, hover: 0 }">
                         @for($i = 1; $i <= 5; $i++)
                             <label class="cursor-pointer">
-                                <input type="radio" name="rating" value="{{ $i }}" class="hidden">
-                                <span class="text-2xl hover:scale-110 transition-transform">⭐</span>
+                                <input type="radio" name="rating" value="{{ $i }}" class="hidden"
+                                       @change="rating = {{ $i }}" required>
+                                <span class="text-3xl inline-block transition-transform hover:scale-110"
+                                      @mouseenter="hover = {{ $i }}" @mouseleave="hover = 0"
+                                      :class="(hover || rating) >= {{ $i }} ? 'opacity-100' : 'opacity-25'">⭐</span>
                             </label>
                         @endfor
                     </div>
+
                     <textarea name="comment" rows="3" placeholder="Share your experience with this recipe..."
                         class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary resize-none mb-4"></textarea>
                     <button type="submit" class="bg-primary hover:bg-secondary text-white font-semibold px-6 py-2 rounded-full transition-all duration-200">
@@ -78,7 +87,11 @@
                     <div class="flex justify-between items-start mb-2">
                         <div>
                             <span class="font-semibold text-suText text-sm">{{ $review->user->name }}</span>
-                            <span class="text-yellow-400 ml-2">{{ str_repeat('⭐', $review->rating) }}</span>
+                            <span class="ml-2">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <span class="text-base {{ $i <= $review->rating ? 'opacity-100' : 'opacity-20' }}">⭐</span>
+                                @endfor
+                            </span>
                         </div>
                         <span class="text-xs text-gray-400">{{ $review->created_at->diffForHumans() }}</span>
                     </div>

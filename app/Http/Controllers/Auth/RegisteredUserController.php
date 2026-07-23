@@ -34,17 +34,26 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:users,name'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'wants_market_woman' => ['nullable', 'boolean'],
         ]);
+
+        $isPendingMarketWoman = $request->boolean('wants_market_woman');
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $isPendingMarketWoman ? 'pending_market_woman' : 'user',
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
+
+        if ($isPendingMarketWoman) {
+            return redirect(route('dashboard', absolute: false))
+                ->with('success', 'Welcome to Su-chef! Your market-woman access is pending admin approval — you can browse and cook in the meantime.');
+        }
 
         return redirect(route('dashboard', absolute: false));
     }

@@ -37,7 +37,7 @@ class ShoppingListController extends Controller
     ]);
 
     $shoppingList = ShoppingList::create([
-        'user_id' => auth()->id(),
+        'user_id' => Auth::id(),
         'name'    => $request->name,
     ]);
 
@@ -86,7 +86,7 @@ public function generateFromRecipe(Recipe $recipe)
 
     // Create a new shopping list named after the recipe
     $shoppingList = ShoppingList::create([
-        'user_id' => auth()->id(),
+        'user_id' => Auth::id(),
         'name'    => $recipe->title . ' — Shopping List',
     ]);
 

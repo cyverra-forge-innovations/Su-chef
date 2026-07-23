@@ -40,6 +40,13 @@ class IngredientController extends Controller
                          ->with('success', 'Ingredient created successfully!');
     }
 
+    // Show a single ingredient
+    public function show(Ingredient $ingredient)
+    {
+        $ingredient->load('recipes');
+        return view('ingredients.show', compact('ingredient'));
+    }
+
     // Show form to edit an ingredient
     public function edit(Ingredient $ingredient)
     {

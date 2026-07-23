@@ -9,6 +9,9 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ShoppingListController;
 use App\Http\Controllers\UserPreferenceController;
+use App\Http\Controllers\MarketController;
+use App\Http\Controllers\IngredientPriceController;
+use App\Http\Controllers\Admin\MarketWomanApprovalController;
 
 // Home
 Route::get('/', function () {
@@ -81,12 +84,35 @@ Route::middleware('auth')->group(function () {
     Route::delete('shopping-lists/{shoppingList}', [ShoppingListController::class, 'destroy'])->name('shopping-lists.destroy');
     Route::patch('shopping-lists/items/{item}/toggle', [ShoppingListController::class, 'toggleItem'])->name('shopping-lists.toggle');
     // Generate shopping list from recipe
-Route::post('shopping-lists/generate/{recipe}', [ShoppingListController::class, 'generateFromRecipe'])->name('shopping-lists.generate');
+    Route::post('shopping-lists/generate/{recipe}', [ShoppingListController::class, 'generateFromRecipe'])->name('shopping-lists.generate');
 
     // User Preferences
     Route::get('preferences', [UserPreferenceController::class, 'index'])->name('preferences.index');
     Route::get('preferences/edit', [UserPreferenceController::class, 'edit'])->name('preferences.edit');
     Route::put('preferences', [UserPreferenceController::class, 'update'])->name('preferences.update');
+
+    // Markets — viewing is open to all logged-in users
+    Route::get('markets', [MarketController::class, 'index'])->name('markets.index');
+
+    // Market Woman / Admin gated — submitting prices and adding markets
+    Route::middleware('can-manage-prices')->group(function () {
+        Route::get('markets/create', [MarketController::class, 'create'])->name('markets.create');
+        Route::post('markets', [MarketController::class, 'store'])->name('markets.store');
+        Route::get('ingredients/{ingredient}/prices/submit', [IngredientPriceController::class, 'create'])->name('ingredient-prices.create');
+        Route::post('ingredients/{ingredient}/prices', [IngredientPriceController::class, 'store'])->name('ingredient-prices.store');
+    });
+
+    // Admin-only — moderation and approvals
+    Route::middleware('is-admin')->group(function () {
+        Route::patch('ingredient-prices/{price}/flag', [IngredientPriceController::class, 'flag'])->name('ingredient-prices.flag');
+        Route::patch('ingredient-prices/{price}/unflag', [IngredientPriceController::class, 'unflag'])->name('ingredient-prices.unflag');
+
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('market-women', [MarketWomanApprovalController::class, 'index'])->name('market-women.index');
+            Route::patch('market-women/{user}/approve', [MarketWomanApprovalController::class, 'approve'])->name('market-women.approve');
+            Route::patch('market-women/{user}/deny', [MarketWomanApprovalController::class, 'deny'])->name('market-women.deny');
+        });
+    });
 
 });
 

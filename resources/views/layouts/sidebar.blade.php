@@ -64,6 +64,15 @@
                 <a href="{{ route('ingredients.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('ingredients*') ? 'bg-primary/20 text-white' : 'hover:bg-white/10 text-gray-300 hover:text-white' }} font-medium text-sm transition-all duration-200">
                     <i class="fa-solid fa-carrot w-4"></i> Ingredients
                 </a>
+                <a href="{{ route('markets.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('markets*') ? 'bg-primary/20 text-white' : 'hover:bg-white/10 text-gray-300 hover:text-white' }} font-medium text-sm transition-all duration-200">
+                    <i class="fa-solid fa-store w-4"></i> Markets
+                </a>
+                @if (auth()->user()?->isAdmin())
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-3 mt-6 px-2">Admin</p>
+                    <a href="{{ route('admin.market-women.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ request()->routeIs('admin.market-women*') ? 'bg-primary/20 text-white' : 'hover:bg-white/10 text-gray-300 hover:text-white' }} font-medium text-sm transition-all duration-200">
+                        <i class="fa-solid fa-user-check w-4"></i> Market Woman Approvals
+                    </a>
+                @endif
                 
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-3 mt-6 px-2">My Stuff</p>
                 

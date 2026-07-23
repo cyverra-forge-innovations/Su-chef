@@ -31,6 +31,14 @@
                 @error('description') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Instructions --}}
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
+                <label class="block text-sm font-semibold text-suText mb-2">Instructions *</label>
+                <textarea name="instructions" rows="8" placeholder="Step-by-step instructions, one step per line..."
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary resize-none">{{ old('instructions') }}</textarea>
+                @error('instructions') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Image --}}
             <div class="bg-white rounded-2xl p-6 shadow-sm">
                 <label class="block text-sm font-semibold text-suText mb-2">Recipe Image</label>

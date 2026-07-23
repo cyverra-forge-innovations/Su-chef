@@ -23,7 +23,7 @@
             placeholder="Search recipes..."
             class="border border-gray-200 rounded-full px-6 py-2 text-sm w-full md:w-80 focus:outline-none focus:border-primary"
         />
-        <div class="flex gap-3 flex-wrap">
+        <div class="flex gap-3 flex-wrap items-center">
             <select name="category" class="border border-gray-200 rounded-full px-5 py-2 text-sm focus:outline-none focus:border-primary">
                 <option value="all">All Categories</option>
                 @foreach(\App\Models\Category::all() as $category)
@@ -38,10 +38,33 @@
                 <option value="medium" {{ request('difficulty') === 'medium' ? 'selected' : '' }}>Medium</option>
                 <option value="hard" {{ request('difficulty') === 'hard' ? 'selected' : '' }}>Hard</option>
             </select>
+
+            {{-- Price range filter --}}
+            <div class="flex items-center gap-2 border border-gray-200 rounded-full px-4 py-2">
+                <span class="text-xs text-gray-400">₦</span>
+                <input
+                    type="number"
+                    name="min_price"
+                    value="{{ request('min_price') }}"
+                    placeholder="Min"
+                    min="0"
+                    class="w-16 text-sm focus:outline-none"
+                />
+                <span class="text-gray-300">–</span>
+                <input
+                    type="number"
+                    name="max_price"
+                    value="{{ request('max_price') }}"
+                    placeholder="Max"
+                    min="0"
+                    class="w-16 text-sm focus:outline-none"
+                />
+            </div>
+
             <button type="submit" class="bg-primary hover:bg-secondary text-white px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200">
                 <i class="fa-solid fa-magnifying-glass mr-1"></i> Search
             </button>
-            @if(request('search') || request('category') || request('difficulty'))
+            @if(request('search') || request('category') || request('difficulty') || request('min_price') || request('max_price'))
                 <a href="{{ route('recipes.index') }}" class="border border-gray-300 text-gray-500 hover:border-primary hover:text-primary px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200">
                     Clear
                 </a>
@@ -56,6 +79,7 @@
         @if($recipes->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($recipes as $recipe)
+                @php $cost = $recipe->getEstimatedCost(); @endphp
                 <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-200 group">
                     {{-- Recipe Image --}}
                     <div class="relative overflow-hidden h-52">
@@ -73,6 +97,15 @@
                             {{ $recipe->difficulty === 'hard' ? 'bg-red-100 text-red-700' : '' }}">
                             {{ ucfirst($recipe->difficulty) }}
                         </span>
+                        {{-- Cost Badge --}}
+                        @if($cost)
+                            <span class="absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full bg-white/90 text-suText">
+                                ₦{{ number_format($cost['min'], 0) }}@if($cost['min'] !== $cost['max']) – ₦{{ number_format($cost['max'], 0) }}@endif
+                                @unless($cost['complete'])
+                                    <span class="text-gray-400">*</span>
+                                @endunless
+                            </span>
+                        @endif
                     </div>
 
                     {{-- Recipe Info --}}
