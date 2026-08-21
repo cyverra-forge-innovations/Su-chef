@@ -11,6 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust all Vercel proxies to fix Mixed Content/HTTP issues
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'can-manage-prices' => \App\Http\Middleware\EnsureCanManagePrices::class,
             'is-admin'          => \App\Http\Middleware\EnsureIsAdmin::class,
