@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Database\NeonConnector;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // Force HTTPS on Vercel production
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
