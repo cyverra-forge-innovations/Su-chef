@@ -59,6 +59,17 @@ return [
             'throw' => false,
             'report' => false,
         ],
+        'neon' => [
+            'driver' => 's3',
+            'key' => env('NEON_STORAGE_ACCESS_KEY_ID'),
+            'secret' => env('NEON_STORAGE_SECRET_ACCESS_KEY'),
+            'region' => 'us-east-2', 
+            'bucket' => env('NEON_STORAGE_BUCKET'),
+            'url' => env('NEON_STORAGE_URL'),
+            'endpoint' => env('NEON_STORAGE_ENDPOINT'),
+            'use_path_style_endpoint' => env('NEON_STORAGE_USE_PATH_STYLE_ENDPOINT', true),
+            'throw' => false,
+        ],
 
     ],
 

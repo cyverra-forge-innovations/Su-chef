@@ -79,7 +79,7 @@ class RecipeController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('recipes', 'public');
+            $imagePath = $request->file('image')->store('recipes', 'neon');
         }
 
         $recipe = Recipe::create([
