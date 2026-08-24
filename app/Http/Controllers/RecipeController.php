@@ -139,7 +139,7 @@ class RecipeController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('recipes', 'public');
+            $imagePath = $request->file('image')->store('recipes', 'neon');
             $recipe->update(['image' => $imagePath]);
         }
 
