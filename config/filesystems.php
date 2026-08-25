@@ -68,7 +68,7 @@ return [
             'url' => env('NEON_STORAGE_URL'),
             'endpoint' => env('NEON_STORAGE_ENDPOINT'),
             'use_path_style_endpoint' => env('NEON_STORAGE_USE_PATH_STYLE_ENDPOINT', true),
-            'throw' => false,
+            'throw' => true,
         ],
 
     ],

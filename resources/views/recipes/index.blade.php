@@ -84,7 +84,8 @@
                     {{-- Recipe Image --}}
                     <div class="relative overflow-hidden h-52">
                         @if($recipe->image)
-                            <img src="{{ asset('storage/' . $recipe->image) }}" alt="{{ $recipe->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ Storage::disk('neon')->url($recipe->image) }}" alt="{{ $recipe->title }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @else
                             <div class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                                 <span class="text-6xl">🍽️</span>
