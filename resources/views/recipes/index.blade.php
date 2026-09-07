@@ -79,13 +79,12 @@
         @if($recipes->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($recipes as $recipe)
-                @php $cost = $recipe->getEstimatedCost(); @endphp
+                <!-- @php $cost = $recipe->getEstimatedCost(); @endphp -->
                 <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-200 group">
                     {{-- Recipe Image --}}
                     <div class="relative overflow-hidden h-52">
                         @if($recipe->image)
-                            <img src="{{ Storage::disk('neon')->url($recipe->image) }}" alt="{{ $recipe->title }}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ str_starts_with($recipe->image, 'http') ? $recipe->image : asset('storage/' . $recipe->image) }}" alt="{{ $recipe->title }}"
                         @else
                             <div class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                                 <span class="text-6xl">🍽️</span>
